@@ -37,7 +37,7 @@ export const StyledSection = styled.div`
     margin: 10px 0;
     padding-left: 10px;
     width: 100%;
-    max-height: ${({bigger}) => (bigger)? "20rem":"8rem" || "8rem"};
+    max-height: ${({bigger}) => (bigger)? "20rem":"10rem" || "10rem"};
     overflow-y: auto;
     border: 0.5px solid lightgrey;
 `

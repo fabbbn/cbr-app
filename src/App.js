@@ -11,7 +11,7 @@ function App() {
       <Router>
       <Switch>
         <Route path='/' exact component={PageInput} />
-        <Route path="/hasil/*" component={PageResult}/>
+        <Route path="/hasil/*" component={PageResult} render={(props) => <PageResult {...props}/>}/>
         <Route component={PageNoMatch}/>
       </Switch>
     </Router>
