@@ -110,10 +110,11 @@ const PageResult = (props) => {
         if(Config.isSubmitted) {
             console.log("reloading the right pane...");
             console.log(Config);
-            
+            setisLoading(true);
             async function fetchResult() {
                 var formData = new FormData();
                 formData.append("config", Config.value);
+
                 await fetch(
                     `http://localhost:8000/similarity-cbr/document/${MetaData.proposal_doc_id}`, {
                         method: 'POST',
@@ -123,7 +124,6 @@ const PageResult = (props) => {
                     async (response) => await response.json()
                 ).then( 
                     ({detail, result:{weights, retrieved, reused, overall }}) => {
-                        setisLoading(true);
                         setResult(
                             { ...Result, weightedItems: weights, retrievedItems: retrieved, reusedItems: reused }
                         )
@@ -575,49 +575,9 @@ const PageResult = (props) => {
             <Head/>
             <Container className="row my-3 py-3 px-0 mx-auto">
                 <h2>Hasil Deteksi Kemiripan Dokumen</h2>
+                {/* section detail dokumen */}
+                    
                 <Container className="col-6 mr-3">
-                    {/* section detail dokumen */}
-                    <StyledContainer>
-                        <h4>Tentang Dokumen</h4>
-                        { isObjectEmpty(MetaData)? 
-                            <div>Tidak ada dokumen yang dimuat, silahkan masukkan dokumen terlebih dahulu</div> 
-                            : 
-                            <Table className="table-borderless">
-                                <tbody>
-                                    <tr className="align-top">
-                                        <th>Judul Proposal</th>
-                                        <td>{MetaData.proposal_title}</td>
-                                    </tr>
-                                    <tr className="align-top">
-                                        <th>Nama Penulis</th>
-                                        <td>{MetaData.proposal_writer}</td>
-                                    </tr>
-                                    <tr className="align-top">
-                                        <th>Tahun Proposal</th>
-                                        <td>{MetaData.proposal_year}</td>
-                                    </tr>
-                                    <tr className="align-top">
-                                        <th>Alamat Email Ketua Tim</th>
-                                        <td><a className="m-0 p-0" href={"mailto:"+MetaData.proposal_email}>{MetaData.proposal_email}</a></td>
-                                    </tr>
-                                    <tr className="align-top">
-                                        <th>SINTA ID Ketua Tim</th>
-                                        <td>{MetaData.proposal_sintaid}</td>
-                                    </tr>
-                                    <tr className="align-top">
-                                        <th>Jenis Ajuan</th>
-                                        <td>{MetaData.proposal_type}</td>
-                                    </tr>
-                                    <tr className="align-top">
-                                        <th >Dokumen Terunggah</th>
-                                        <td className="p-2 row justify-content-left">
-                                            <a className="m-0 col-6" as={Button} variant="link" href={`http://localhost:8000/download/${MetaData.proposal_doc_link}`} download>Unduh Dokumen</a>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </Table>
-                        }
-                    </StyledContainer>
                     <StyledContainer>
                         <h4>Bagian Dokumen</h4>
                         {(PreProcessed.doc_parted.length===0)? <div>Sedang dimuat...</div>: 
@@ -667,9 +627,51 @@ const PageResult = (props) => {
                 </Container>
                 <Container className="col-6 ml-3">
                     <StyledContainer>
-                        <h4>Hasil Vektorisasi dan Deteksi Kemiripan dengan CBR</h4>
+                        <h4>Tentang Dokumen</h4>
+                        { isObjectEmpty(MetaData)? 
+                            <div>Tidak ada dokumen yang dimuat, silahkan masukkan dokumen terlebih dahulu</div> 
+                            : 
+                            <Table className="table-borderless">
+                                <tbody>
+                                    <tr className="align-top">
+                                        <th>Judul Proposal</th>
+                                        <td>{MetaData.proposal_title}</td>
+                                    </tr>
+                                    <tr className="align-top">
+                                        <th>Nama Penulis</th>
+                                        <td>{MetaData.proposal_writer}</td>
+                                    </tr>
+                                    <tr className="align-top">
+                                        <th>Tahun Proposal</th>
+                                        <td>{MetaData.proposal_year}</td>
+                                    </tr>
+                                    <tr className="align-top">
+                                        <th>Alamat Email Ketua Tim</th>
+                                        <td><a className="m-0 p-0" href={"mailto:"+MetaData.proposal_email}>{MetaData.proposal_email}</a></td>
+                                    </tr>
+                                    <tr className="align-top">
+                                        <th>SINTA ID Ketua Tim</th>
+                                        <td>{MetaData.proposal_sintaid}</td>
+                                    </tr>
+                                    <tr className="align-top">
+                                        <th>Jenis Ajuan</th>
+                                        <td>{MetaData.proposal_type}</td>
+                                    </tr>
+                                    <tr className="align-top">
+                                        <th >Dokumen Terunggah</th>
+                                        <td className="p-2 row justify-content-left">
+                                            <a className="m-0 col-6" as={Button} variant="link" href={`http://localhost:8000/download/${MetaData.proposal_doc_link}`} download>Unduh Dokumen</a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </Table>
+                        }
+                    </StyledContainer>
+                    <StyledContainer>
+                        {/* <h2>Hasil Vektorisasi dan Deteksi Kemiripan dengan CBR</h2> */}
+                        <h4>Hasil Pembobotan Bagian Dokumen</h4>
                         <StyledForm bsPrefix="one-line" className="row justify-content-between" onSubmit={handleSubmit}>
-                        <h6>Konfigurasi</h6>
+                        <h5>Konfigurasi</h5>
                             <StyledFormGroup className="col-7">
                                 <Form.Select aria-label="-- Pilih Konfigurasi --" name="prop_type" onChange={handleChange}>
                                     <option value="">-- Pilih Konfigurasi --</option>
@@ -682,14 +684,13 @@ const PageResult = (props) => {
                             <Button className="col-4" bsPrefix="custom-btn" type="submit">Proses Dokumen</Button>
                         </StyledForm>
                         <h5>Hasil Pembobotan</h5>
-                        { (Config.value==='')? <div>Silahkan pilih konfigurasi lalu klik <b>"Proses Dokumen"</b></div> : <></> }
-                        { (isLoading)? <div>Sedang melakukan perhitungan...</div> : <></> } 
-                        { (Result.weightedItems.length!==0)? <></> : 
+                        { (Config.value==='')? <div>Silahkan pilih konfigurasi lalu klik <b>"Proses Dokumen"</b></div> : <></> } 
+                        { (Result.weightedItems.length===0)? <></> : 
                             <ol>
                                 { Result.weightedItems.map((part, index) => (
                                     <StyledContainer key={index}>
                                         <h6><li>{part.chapter}</li></h6>
-                                        <StyledSection>
+                                        <StyledSection bigger={true}>
                                             <Table striped bordered hover size="sm" responsive="md">
                                                 <StyledTableHead >
                                                     <tr>
@@ -711,12 +712,12 @@ const PageResult = (props) => {
                                                 </tbody>
                                             </Table>
                                         </StyledSection>
+                                        <p className="mb-2"><i>Total term/kata dalam bagian dokumen: {part.data.length} kata</i></p>
                                     </StyledContainer>
-                                ))
-                                }
+                                ))}
                             </ol>
-                            
                         }
+                        { (isLoading && Result.weightedItems.length===0)? <div><b><i>Sedang melakukan perhitungan...</i></b></div> : <></> }
                         { (Config.value==='')? <></>:
                             <StyledContainer>
                                 <p>Formula TF-IDF yang digunakan (berdasarkan konfigurasi)</p>
@@ -724,128 +725,202 @@ const PageResult = (props) => {
                             </StyledContainer>
                         }
                     </StyledContainer>
-                    <StyledContainer>
-                        <h4>Hasil Metode CBR</h4>
-                        { (Config.isResultLoading)? <div>Sedang melakukan perhitungan...</div> : 
-                            <div>Silahkan pilih konfigurasi lalu klik <b>"Proses Dokumen"</b></div>
-                        }
-                        { !(Config.isResultLoaded)? <></>:
-                            <ol>
-                                <StyledContainer>
-                                    <h5><li>{data.doc_cbr[0].step}</li></h5>
-                                    <p>{data.doc_cbr[0].note}</p>
-                                    <StyledSection bigger={true}>
-                                        <Table striped bordered hover size="sm" responsive="md">
-                                            <StyledTableHead >
-                                                <tr>
-                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Uji</StyledTableHeadCol>
-                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Judul Dokumen Mirip</StyledTableHeadCol>
-                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Mirip</StyledTableHeadCol>
-                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Nilai Cosine Similarity</StyledTableHeadCol>
-                                                </tr>
-                                            </StyledTableHead>
-                                            <tbody>
-                                                {data.doc_cbr[0].result.map((row, i) => (
-                                                    <tr key={i}>
-                                                        <td>{row.doc_part_name}</td>
-                                                        <td>{row.sim_doc_title}</td>
-                                                        <td>{row.sim_doc_part_name}</td>
-                                                        <td>{row.cos_sim_value}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </Table>
-                                    </StyledSection>
-                                </StyledContainer>
-                                <StyledContainer>
-                                    <h5><li>{data.doc_cbr[1].step}</li></h5>
-                                    <p>{data.doc_cbr[1].note}</p>
-                                    <StyledSection bigger={true}>
-                                        <Table striped bordered hover size="sm" responsive="md">
-                                            <StyledTableHead >
-                                                <tr>
-                                                <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Uji</StyledTableHeadCol>
-                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Jumlah Bagian Dokumen di atas Threshold</StyledTableHeadCol>
-                                                </tr>
-                                                    
-                                            </StyledTableHead>
-                                            <tbody>
-                                                {data.doc_cbr[1].result.map((row, i) => (
-                                                    <tr key={i}>
-                                                        <td>{row.doc_part_name}</td>
-                                                        <td className="text-senter">{row.num_reused}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </Table>
-                                    </StyledSection>
-                                </StyledContainer>
-                                <StyledContainer>
-                                    <h5><li>{data.doc_cbr[2].step}</li></h5>
-                                    <p>{data.doc_cbr[2].note}</p>
-                                    <StyledSection bigger={true}>
-                                        <Table striped bordered hover size="sm" responsive="md">
-                                            <StyledTableHead >
-                                                <tr>
-                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Uji</StyledTableHeadCol>
-                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Judul Dokumen Mirip</StyledTableHeadCol>
-                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Mirip</StyledTableHeadCol>
-                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Nilai Cosine Similarity</StyledTableHeadCol>
-                                                </tr>
-                                            </StyledTableHead>
-                                            <tbody>
-                                                {data.doc_cbr[2].result.map((row, i) => (
-                                                    <tr key={i}>
-                                                        <td>{row.doc_part_name}</td>
-                                                        <td>{row.sim_doc_title}</td>
-                                                        <td>{row.sim_doc_part_name}</td>
-                                                        <td>{row.cos_sim_value}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </Table>
-                                    </StyledSection>
-                                </StyledContainer>
-                                <StyledContainer>
-                                    <h5><li>{data.doc_cbr[3].step}</li></h5>
-                                    <p>{data.doc_cbr[3].note}</p>
-                                </StyledContainer>
-                            </ol>
-                        }
-                    </StyledContainer>
-                    <StyledContainer>
-                        <h4>Hasil Pengujian</h4>
-                        <StyledSection bigger={true}>
-                            { !(Config.isResultLoaded)? <></>:
-                            <Table striped bordered hover size="sm" responsive="md">
-                                <StyledTableHead >
-                                    <tr className="align-top">
-                                        <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Uji</StyledTableHeadCol>
-                                        <StyledTableHeadCol scope="col" className="thead-sticky">Konfigurasi</StyledTableHeadCol>
-                                        <StyledTableHeadCol scope="col" className="thead-sticky">Jumlah Dokumen Retrieved</StyledTableHeadCol>
-                                        <StyledTableHeadCol scope="col" className="thead-sticky">Jumlah Dokumen Reused</StyledTableHeadCol>
-                                        <StyledTableHeadCol scope="col" className="thead-sticky">Nilai Cosine Similarity</StyledTableHeadCol>
-                                        <StyledTableHeadCol scope="col" className="thead-sticky">Waktu Komputasi (s)</StyledTableHeadCol>
-                                    </tr>
-                                </StyledTableHead>
-                                <tbody>
-                                    { History.map((row, i) => (
-                                        <tr key={i}>
-                                            <td>{row.doc_part_name}</td>
-                                            <td>{row.config}</td>
-                                            <td>{row.num_retrieved}</td>
-                                            <td>{row.num_reused}</td>
-                                            <td>{row.cos_sim_value}</td>
-                                            <td>{row.runtime}</td>
-                                        </tr>
-                                        )
-                                    )}
-                                </tbody>
-                            </Table>
-                            }
-                        </StyledSection>
-                    </StyledContainer>
                 </Container>
+                <Container className="row my-3 mx-auto">
+                    <h3>Hasil Deteksi Kemiripan Dokumen dengan CBR</h3>
+                    { (Config.value==='')? <div>Silahkan pilih konfigurasi lalu klik <b>"Proses Dokumen"</b></div> : <></> }
+                    
+                    <ol>
+                        <StyledContainer>
+                            <h4><li>Retrieval</li></h4>
+                            <p>Voluptate mollit consectetur nulla irure nulla veniam in anim irure adipisicing enim eu.</p>
+                            { (Result.retrievedItems.length===0)? <></> :
+                                <ol type="a">
+                                    { Result.retrievedItems.map((part, index) => (
+                                        <StyledContainer key={index}>
+                                            <h5><li>{part.chapter}</li></h5>
+                                            <StyledSection bigger={true}>
+                                                <Table striped bordered hover size="sm" responsive="md">
+                                                    <StyledTableHead>
+                                                        <tr>
+                                                            <StyledTableHeadCol scope="col" className="thead-sticky">Judul Dokumen Mirip</StyledTableHeadCol>
+                                                            <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Mirip</StyledTableHeadCol>
+                                                            <StyledTableHeadCol scope="col" className="thead-sticky">Nilai <i>Cosine Similarity</i></StyledTableHeadCol>
+                                                            <StyledTableHeadCol scope="col" className="thead-sticky">Aksi</StyledTableHeadCol>
+                                                        </tr>
+                                                    </StyledTableHead>
+                                                    <tbody>
+                                                        {part.data.map((row, index) => (
+                                                            <tr key={index}>
+                                                                <td>{row.doc_title}</td>
+                                                                <td>{row.sim_doc_part_name}</td>
+                                                                <td>{row.cos_sim_value}</td>
+                                                                <td><a href={`http://localhost:8000/download/${row.doc_filename}`}>Unduh</a></td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </Table>
+                                            </StyledSection>
+                                            <p><i>Total bagian dokumen yang diambil kembali (retrieved): {part.data.length} bagian dokumen</i></p>
+                                        </StyledContainer>
+                                    ))}
+                                </ol>
+                            }
+                        </StyledContainer>
+                        <StyledContainer>
+                            <h4><li>Reused</li></h4>
+                            <p>Pada tahap ini diambil hanya bagian dokumen dengan nilai kemiripan diatas nilai <i>Threshold</i></p>
+                            <p><i>Threshold = 0.2 (Saptono et. al., 2018</i></p>
+                            { (Result.reusedItems.length===0)? <></> :
+                                <ol type="a">
+                                    { Result.reusedItems.map((part, index) => (
+                                        <StyledContainer key={index}>
+                                            <h5><li>{part.chapter}</li></h5>
+                                            <StyledSection>
+                                                <Table striped bordered hover size="sm" responsive="md">
+                                                    <StyledTableHead>
+                                                        <tr>
+                                                            <StyledTableHeadCol scope="col" className="thead-sticky">Judul Dokumen Mirip</StyledTableHeadCol>
+                                                            <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Mirip</StyledTableHeadCol>
+                                                            <StyledTableHeadCol scope="col" className="thead-sticky">Nilai <i>Cosine Similarity</i></StyledTableHeadCol>
+                                                            <StyledTableHeadCol scope="col" className="thead-sticky">Aksi</StyledTableHeadCol>
+                                                        </tr>
+                                                    </StyledTableHead>
+                                                    <tbody>
+                                                        {part.data.map((row, index) => (
+                                                            <tr key={index}>
+                                                                <td>{row.doc_title}</td>
+                                                                <td>{row.sim_doc_part_name}</td>
+                                                                <td>{row.cos_sim_value}</td>
+                                                                <td><a href={`http://localhost:8000/download/${row.doc_filename}`}>Unduh</a></td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </Table>
+                                            </StyledSection>
+                                            <p><i>Total bagian dokumen yang tersaring (reused): {part.data.length} bagian dokumen</i></p>
+                                        </StyledContainer>
+                                    ))}
+                                </ol>
+                            }
+                        </StyledContainer>
+                    </ol>
+                    { !(Config.isResultLoaded)? <></>:
+                        <ol>
+                            <StyledContainer>
+                                <h5><li>{data.doc_cbr[0].step}</li></h5>
+                                <p>{data.doc_cbr[0].note}</p>
+                                <StyledSection bigger={true}>
+                                    <Table striped bordered hover size="sm" responsive="md">
+                                        <StyledTableHead >
+                                            <tr>
+                                                <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Uji</StyledTableHeadCol>
+                                                <StyledTableHeadCol scope="col" className="thead-sticky">Judul Dokumen Mirip</StyledTableHeadCol>
+                                                <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Mirip</StyledTableHeadCol>
+                                                <StyledTableHeadCol scope="col" className="thead-sticky">Nilai Cosine Similarity</StyledTableHeadCol>
+                                            </tr>
+                                        </StyledTableHead>
+                                        <tbody>
+                                            {data.doc_cbr[0].result.map((row, i) => (
+                                                <tr key={i}>
+                                                    <td>{row.doc_part_name}</td>
+                                                    <td>{row.sim_doc_title}</td>
+                                                    <td>{row.sim_doc_part_name}</td>
+                                                    <td>{row.cos_sim_value}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </Table>
+                                </StyledSection>
+                            </StyledContainer>
+                            <StyledContainer>
+                                <h5><li>{data.doc_cbr[1].step}</li></h5>
+                                <p>{data.doc_cbr[1].note}</p>
+                                <StyledSection bigger={true}>
+                                    <Table striped bordered hover size="sm" responsive="md">
+                                        <StyledTableHead >
+                                            <tr>
+                                            <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Uji</StyledTableHeadCol>
+                                                <StyledTableHeadCol scope="col" className="thead-sticky">Jumlah Bagian Dokumen di atas Threshold</StyledTableHeadCol>
+                                            </tr>
+                                                
+                                        </StyledTableHead>
+                                        <tbody>
+                                            {data.doc_cbr[1].result.map((row, i) => (
+                                                <tr key={i}>
+                                                    <td>{row.doc_part_name}</td>
+                                                    <td className="text-senter">{row.num_reused}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </Table>
+                                </StyledSection>
+                            </StyledContainer>
+                            <StyledContainer>
+                                <h5><li>{data.doc_cbr[2].step}</li></h5>
+                                <p>{data.doc_cbr[2].note}</p>
+                                <StyledSection bigger={true}>
+                                    <Table striped bordered hover size="sm" responsive="md">
+                                        <StyledTableHead >
+                                            <tr>
+                                                <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Uji</StyledTableHeadCol>
+                                                <StyledTableHeadCol scope="col" className="thead-sticky">Judul Dokumen Mirip</StyledTableHeadCol>
+                                                <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Mirip</StyledTableHeadCol>
+                                                <StyledTableHeadCol scope="col" className="thead-sticky">Nilai Cosine Similarity</StyledTableHeadCol>
+                                            </tr>
+                                        </StyledTableHead>
+                                        <tbody>
+                                            {data.doc_cbr[2].result.map((row, i) => (
+                                                <tr key={i}>
+                                                    <td>{row.doc_part_name}</td>
+                                                    <td>{row.sim_doc_title}</td>
+                                                    <td>{row.sim_doc_part_name}</td>
+                                                    <td>{row.cos_sim_value}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </Table>
+                                </StyledSection>
+                            </StyledContainer>
+                            <StyledContainer>
+                                <h5><li>{data.doc_cbr[3].step}</li></h5>
+                                <p>{data.doc_cbr[3].note}</p>
+                            </StyledContainer>
+                        </ol>
+                    }
+                </Container>
+                <StyledContainer>
+                    <h4>Hasil Pengujian</h4>
+                    <StyledSection bigger={true}>
+                        { !(Config.isResultLoaded)? <></>:
+                        <Table striped bordered hover size="sm" responsive="md">
+                            <StyledTableHead >
+                                <tr className="align-top">
+                                    <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Uji</StyledTableHeadCol>
+                                    <StyledTableHeadCol scope="col" className="thead-sticky">Konfigurasi</StyledTableHeadCol>
+                                    <StyledTableHeadCol scope="col" className="thead-sticky">Jumlah Dokumen Retrieved</StyledTableHeadCol>
+                                    <StyledTableHeadCol scope="col" className="thead-sticky">Jumlah Dokumen Reused</StyledTableHeadCol>
+                                    <StyledTableHeadCol scope="col" className="thead-sticky">Nilai Cosine Similarity</StyledTableHeadCol>
+                                    <StyledTableHeadCol scope="col" className="thead-sticky">Waktu Komputasi (s)</StyledTableHeadCol>
+                                </tr>
+                            </StyledTableHead>
+                            <tbody>
+                                { History.map((row, i) => (
+                                    <tr key={i}>
+                                        <td>{row.doc_part_name}</td>
+                                        <td>{row.config}</td>
+                                        <td>{row.num_retrieved}</td>
+                                        <td>{row.num_reused}</td>
+                                        <td>{row.cos_sim_value}</td>
+                                        <td>{row.runtime}</td>
+                                    </tr>
+                                    )
+                                )}
+                            </tbody>
+                        </Table>
+                        }
+                    </StyledSection>
+                </StyledContainer>
             </Container>
         </div>
         </>
