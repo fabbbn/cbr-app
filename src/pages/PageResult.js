@@ -8,19 +8,25 @@ import { StyledTableHead, StyledTableHeadCol } from "../components/styles/Table.
 import { StyledForm, StyledFormGroup } from "../components/styles/Form.style";
 
 const PageResult = (props) => {
-    // props.location.state
-    const [MetaData, setMetaData] = useState({
-        proposal_id: props.location.state.proposal_id,
-        proposal_title: props.location.state.proposal_title,
-        proposal_writer: props.location.state.proposal_writer,
-        proposal_year: props.location.state.proposal_year,
-        proposal_email: props.location.state.proposal_email,
-        proposal_type: props.location.state.proposal_type,
-        proposal_sintaid: props.location.state.proposal_sintaid,
-        proposal_doc_id: props.location.state.proposal_doc_id,
-        proposal_doc_link: props.location.state.proposal_doc_link
-    });
-    console.log(MetaData)
+    const isObjectEmpty = (obj) => {
+        for ( var i in obj ) return false;
+        return true;
+    } 
+    
+    const [MetaData, setMetaData] = useState(
+        (props.location.state===undefined)? {} : 
+        {
+            proposal_id: props.location.state.proposal_id,
+            proposal_title: props.location.state.proposal_title,
+            proposal_writer: props.location.state.proposal_writer,
+            proposal_year: props.location.state.proposal_year,
+            proposal_email: props.location.state.proposal_email,
+            proposal_type: props.location.state.proposal_type,
+            proposal_sintaid: props.location.state.proposal_sintaid,
+            proposal_doc_id: props.location.state.proposal_doc_id,
+            proposal_doc_link: props.location.state.proposal_doc_link
+        }
+    );
     // const [MetaData, setMetaData] = useState({
     //     proposal_id: 24,
     //     proposal_title: "PENAPISAN FITOKIMIA MELALUI METODE EKSTRAKSI BERBEDA PADA TANAMAN AIR SEBAGAI POTENSI OBAT PENYAKIT IKAN",
@@ -36,8 +42,14 @@ const PageResult = (props) => {
         doc_parted: [],
         doc_pre_processed: []
     });
-    const [Weights, setWeights] = useState([]);
-    const [CbrSearch, setCbrSearch] = useState({
+    const [Config, setConfig] = useState({
+        value:'',
+        isSubmitted:false
+    });
+    const [isLoading, setisLoading] = useState(false);
+    const [isLoaded, setisLoaded] = useState(false);
+    const [Result, setResult] = useState({
+        weightedItems:[],
         retrievedItems:[],
         reusedItems:[]
     });
@@ -71,35 +83,89 @@ const PageResult = (props) => {
                 error => console.log(error)
             )
         }
-        async function fetchWeights() {
-            await fetch(`http://localhost:8000/similarity-cbr/document/${MetaData.proposal_doc_id}`).then(
-                response => response.json
-            ).then( 
-                ({detail, result:{weights, retrieved, reused, overall}}) => {
-                    setWeights(weights);
-                    setCbrSearch(
-                        {...CbrSearch, retrievedItems: retrieved, reusedItems: reused}
-                    )
-                    setHistory(
-                        (prevHistory) => ({History: [overall, ...prevHistory]})
-                    )
-                    // this.setState(prevState => ({
-                    //     myArray: [ {"name": "object"}, ...prevState.myArray]
-                    //   }))
-                    return detail;
-                }
-            ).then( 
-                detail => alert(detail)
-            ).catch(
-                error => console.log(error)
-            )
-        }
         fetchPreprocess();
         console.log(PreProcessed)
         
-        return () => {}
+        return () => {
+            console.log("reset all the data...");
+            setConfig({
+                value:'',
+                isSubmitted:false
+            });
+            setPreProcessed({
+                doc_parted: [],
+                doc_pre_processed: []
+            });
+            setResult({
+                weightedItems:[],
+                retrievedItems:[],
+                reusedItems:[]
+            });
+            setisLoading(false);
+        }
         
     }, []);
+
+    useEffect(() => {
+        if(Config.isSubmitted) {
+            console.log("reloading the right pane...");
+            console.log(Config);
+            
+            async function fetchResult() {
+                var formData = new FormData();
+                formData.append("config", Config.value);
+                await fetch(
+                    `http://localhost:8000/similarity-cbr/document/${MetaData.proposal_doc_id}`, {
+                        method: 'POST',
+                        body: formData
+                    }
+                ).then(
+                    async (response) => await response.json()
+                ).then( 
+                    ({detail, result:{weights, retrieved, reused, overall }}) => {
+                        setisLoading(true);
+                        setResult(
+                            { ...Result, weightedItems: weights, retrievedItems: retrieved, reusedItems: reused }
+                        )
+                        return { detail, history: overall };
+                }).then( ({detail, history}) => {
+                    setHistory( oldHistory => [...oldHistory, history] );
+                    return detail;
+                }).then(
+                    detail => alert(detail)
+                ).catch(
+                    error => {console.log(error)}
+                )
+            }
+            fetchResult();
+            
+            console.log(History);
+            console.log(Result);
+        }
+        return () => {
+            setConfig(
+                {...Config.value, isSubmitted:false}
+            )
+        }
+    }, [Config.isSubmitted]);
+
+    // setisLoaded(true);
+
+    const handleChange = (e) => {
+        setConfig({
+            value:e.target.value,
+            isSubmitted:false
+        });
+        console.log(e.target.value);
+    }
+    
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        setConfig({
+            value:Config.value,
+            isSubmitted:true
+        });
+    }
     const res_submit = {
         "proposal_id": 6,
         "proposal_title": "KAJIAN EFEK SINERGIS DARI BAWANG PUTIH DAN BELIMBING WULUH SEBAGAI KANDIDAT OBAT UNTUK PENYAKIT IKAN",
@@ -513,40 +579,44 @@ const PageResult = (props) => {
                     {/* section detail dokumen */}
                     <StyledContainer>
                         <h4>Tentang Dokumen</h4>
-                        <Table className="table-borderless">
-                            <tbody>
-                                <tr className="align-top">
-                                    <th>Judul Proposal</th>
-                                    <td>{MetaData.proposal_title}</td>
-                                </tr>
-                                <tr className="align-top">
-                                    <th>Nama Penulis</th>
-                                    <td>{MetaData.proposal_writer}</td>
-                                </tr>
-                                <tr className="align-top">
-                                    <th>Tahun Proposal</th>
-                                    <td>{MetaData.proposal_year}</td>
-                                </tr>
-                                <tr className="align-top">
-                                    <th>Alamat Email Ketua Tim</th>
-                                    <td><a className="m-0 p-0" href={"mailto:"+MetaData.proposal_email}>{MetaData.proposal_email}</a></td>
-                                </tr>
-                                <tr className="align-top">
-                                    <th>SINTA ID Ketua Tim</th>
-                                    <td>{MetaData.proposal_sintaid}</td>
-                                </tr>
-                                <tr className="align-top">
-                                    <th>Jenis Ajuan</th>
-                                    <td>{MetaData.proposal_type}</td>
-                                </tr>
-                                <tr className="align-top">
-                                    <th >Dokumen Terunggah</th>
-                                    <td className="p-2 row justify-content-left">
-                                        <a className="m-0 col-6" as={Button} variant="link" href={`http://localhost:8000/download/${MetaData.proposal_doc_link}`} download>Unduh Dokumen</a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </Table>
+                        { isObjectEmpty(MetaData)? 
+                            <div>Tidak ada dokumen yang dimuat, silahkan masukkan dokumen terlebih dahulu</div> 
+                            : 
+                            <Table className="table-borderless">
+                                <tbody>
+                                    <tr className="align-top">
+                                        <th>Judul Proposal</th>
+                                        <td>{MetaData.proposal_title}</td>
+                                    </tr>
+                                    <tr className="align-top">
+                                        <th>Nama Penulis</th>
+                                        <td>{MetaData.proposal_writer}</td>
+                                    </tr>
+                                    <tr className="align-top">
+                                        <th>Tahun Proposal</th>
+                                        <td>{MetaData.proposal_year}</td>
+                                    </tr>
+                                    <tr className="align-top">
+                                        <th>Alamat Email Ketua Tim</th>
+                                        <td><a className="m-0 p-0" href={"mailto:"+MetaData.proposal_email}>{MetaData.proposal_email}</a></td>
+                                    </tr>
+                                    <tr className="align-top">
+                                        <th>SINTA ID Ketua Tim</th>
+                                        <td>{MetaData.proposal_sintaid}</td>
+                                    </tr>
+                                    <tr className="align-top">
+                                        <th>Jenis Ajuan</th>
+                                        <td>{MetaData.proposal_type}</td>
+                                    </tr>
+                                    <tr className="align-top">
+                                        <th >Dokumen Terunggah</th>
+                                        <td className="p-2 row justify-content-left">
+                                            <a className="m-0 col-6" as={Button} variant="link" href={`http://localhost:8000/download/${MetaData.proposal_doc_link}`} download>Unduh Dokumen</a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </Table>
+                        }
                     </StyledContainer>
                     <StyledContainer>
                         <h4>Bagian Dokumen</h4>
@@ -598,11 +668,11 @@ const PageResult = (props) => {
                 <Container className="col-6 ml-3">
                     <StyledContainer>
                         <h4>Hasil Vektorisasi dan Deteksi Kemiripan dengan CBR</h4>
-                        <StyledForm bsPrefix="one-line" className="row justify-content-between">
+                        <StyledForm bsPrefix="one-line" className="row justify-content-between" onSubmit={handleSubmit}>
                         <h6>Konfigurasi</h6>
                             <StyledFormGroup className="col-7">
-                                <Form.Select aria-label="-- Pilih Konfigurasi --" name="prop_type">
-                                    <option>-- Pilih Konfigurasi --</option>
+                                <Form.Select aria-label="-- Pilih Konfigurasi --" name="prop_type" onChange={handleChange}>
+                                    <option value="">-- Pilih Konfigurasi --</option>
                                     <option value="manning">(1) Pembobotan dalam Manning et al., 2008</option>
                                     <option value="jiffriya">(2) Pembobotan dalam Jiffriya et al., 2014</option>
                                     <option value="xu">(3) Pembobotan dalam Xu et al., 2016</option>
@@ -612,119 +682,142 @@ const PageResult = (props) => {
                             <Button className="col-4" bsPrefix="custom-btn" type="submit">Proses Dokumen</Button>
                         </StyledForm>
                         <h5>Hasil Pembobotan</h5>
-                        <StyledSection bigger={true}>
-                            <Table striped bordered hover size="sm" responsive="md">
-                                <StyledTableHead >
-                                    <tr>
-                                        <StyledTableHeadCol scope="col" className="thead-sticky">Term/Kata</StyledTableHeadCol>
-                                        <StyledTableHeadCol scope="col" className="thead-sticky">TF</StyledTableHeadCol>
-                                        <StyledTableHeadCol scope="col" className="thead-sticky">IDF</StyledTableHeadCol>
-                                        <StyledTableHeadCol scope="col" className="thead-sticky">W = TF x IDF</StyledTableHeadCol>
-                                    </tr>
-                                </StyledTableHead>
-                                <tbody>
-                                    {data.doc_weights.map((row, i) => (
-                                        <tr key={i}>
-                                            <td>{row.term}</td>
-                                            <td>{row.freq}</td>
-                                            <td>{row.idf}</td>
-                                            <td>{row.weight}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </Table>
-                        </StyledSection>
-                        <p>Formula TF-IDF yang digunakan (berdasarkan konfigurasi)</p>
-                        <StyledImage className="center" src={"manning.svg"} alt={"Formula TF-IDF"}></StyledImage>
+                        { (Config.value==='')? <div>Silahkan pilih konfigurasi lalu klik <b>"Proses Dokumen"</b></div> : <></> }
+                        { (isLoading)? <div>Sedang melakukan perhitungan...</div> : <></> } 
+                        { (Result.weightedItems.length!==0)? <></> : 
+                            <ol>
+                                { Result.weightedItems.map((part, index) => (
+                                    <StyledContainer key={index}>
+                                        <h6><li>{part.chapter}</li></h6>
+                                        <StyledSection>
+                                            <Table striped bordered hover size="sm" responsive="md">
+                                                <StyledTableHead >
+                                                    <tr>
+                                                        <StyledTableHeadCol scope="col" className="thead-sticky">Term/Kata</StyledTableHeadCol>
+                                                        <StyledTableHeadCol scope="col" className="thead-sticky">TF</StyledTableHeadCol>
+                                                        <StyledTableHeadCol scope="col" className="thead-sticky">IDF</StyledTableHeadCol>
+                                                        <StyledTableHeadCol scope="col" className="thead-sticky">W = TF x IDF</StyledTableHeadCol>
+                                                    </tr>
+                                                </StyledTableHead>
+                                                <tbody>
+                                                    {part.data.map((row, index) => (
+                                                        <tr key={index}>
+                                                            <td>{row.token}</td>
+                                                            <td>{row.frequency}</td>
+                                                            <td>{row.idf}</td>
+                                                            <td>{row.weight}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </Table>
+                                        </StyledSection>
+                                    </StyledContainer>
+                                ))
+                                }
+                            </ol>
+                            
+                        }
+                        { (Config.value==='')? <></>:
+                            <StyledContainer>
+                                <p>Formula TF-IDF yang digunakan (berdasarkan konfigurasi)</p>
+                                <StyledImage className="center" src={`${Config.value}.svg`} alt={"Formula TF-IDF"}></StyledImage>
+                            </StyledContainer>
+                        }
                     </StyledContainer>
                     <StyledContainer>
                         <h4>Hasil Metode CBR</h4>
-                        <ol>
-                            <StyledContainer>
-                                <h5><li>{data.doc_cbr[0].step}</li></h5>
-                                <p>{data.doc_cbr[0].note}</p>
-                                <StyledSection bigger={true}>
-                                    <Table striped bordered hover size="sm" responsive="md">
-                                        <StyledTableHead >
-                                            <tr>
+                        { (Config.isResultLoading)? <div>Sedang melakukan perhitungan...</div> : 
+                            <div>Silahkan pilih konfigurasi lalu klik <b>"Proses Dokumen"</b></div>
+                        }
+                        { !(Config.isResultLoaded)? <></>:
+                            <ol>
+                                <StyledContainer>
+                                    <h5><li>{data.doc_cbr[0].step}</li></h5>
+                                    <p>{data.doc_cbr[0].note}</p>
+                                    <StyledSection bigger={true}>
+                                        <Table striped bordered hover size="sm" responsive="md">
+                                            <StyledTableHead >
+                                                <tr>
+                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Uji</StyledTableHeadCol>
+                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Judul Dokumen Mirip</StyledTableHeadCol>
+                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Mirip</StyledTableHeadCol>
+                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Nilai Cosine Similarity</StyledTableHeadCol>
+                                                </tr>
+                                            </StyledTableHead>
+                                            <tbody>
+                                                {data.doc_cbr[0].result.map((row, i) => (
+                                                    <tr key={i}>
+                                                        <td>{row.doc_part_name}</td>
+                                                        <td>{row.sim_doc_title}</td>
+                                                        <td>{row.sim_doc_part_name}</td>
+                                                        <td>{row.cos_sim_value}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </Table>
+                                    </StyledSection>
+                                </StyledContainer>
+                                <StyledContainer>
+                                    <h5><li>{data.doc_cbr[1].step}</li></h5>
+                                    <p>{data.doc_cbr[1].note}</p>
+                                    <StyledSection bigger={true}>
+                                        <Table striped bordered hover size="sm" responsive="md">
+                                            <StyledTableHead >
+                                                <tr>
                                                 <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Uji</StyledTableHeadCol>
-                                                <StyledTableHeadCol scope="col" className="thead-sticky">Judul Dokumen Mirip</StyledTableHeadCol>
-                                                <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Mirip</StyledTableHeadCol>
-                                                <StyledTableHeadCol scope="col" className="thead-sticky">Nilai Cosine Similarity</StyledTableHeadCol>
-                                            </tr>
-                                        </StyledTableHead>
-                                        <tbody>
-                                            {data.doc_cbr[0].result.map((row, i) => (
-                                                <tr key={i}>
-                                                    <td>{row.doc_part_name}</td>
-                                                    <td>{row.sim_doc_title}</td>
-                                                    <td>{row.sim_doc_part_name}</td>
-                                                    <td>{row.cos_sim_value}</td>
+                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Jumlah Bagian Dokumen di atas Threshold</StyledTableHeadCol>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </Table>
-                                </StyledSection>
-                            </StyledContainer>
-                            <StyledContainer>
-                                <h5><li>{data.doc_cbr[1].step}</li></h5>
-                                <p>{data.doc_cbr[1].note}</p>
-                                <StyledSection bigger={true}>
-                                    <Table striped bordered hover size="sm" responsive="md">
-                                        <StyledTableHead >
-                                            <tr>
-                                            <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Uji</StyledTableHeadCol>
-                                                <StyledTableHeadCol scope="col" className="thead-sticky">Jumlah Bagian Dokumen di atas Threshold</StyledTableHeadCol>
-                                            </tr>
-                                                
-                                        </StyledTableHead>
-                                        <tbody>
-                                            {data.doc_cbr[1].result.map((row, i) => (
-                                                <tr key={i}>
-                                                    <td>{row.doc_part_name}</td>
-                                                    <td className="text-senter">{row.num_reused}</td>
+                                                    
+                                            </StyledTableHead>
+                                            <tbody>
+                                                {data.doc_cbr[1].result.map((row, i) => (
+                                                    <tr key={i}>
+                                                        <td>{row.doc_part_name}</td>
+                                                        <td className="text-senter">{row.num_reused}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </Table>
+                                    </StyledSection>
+                                </StyledContainer>
+                                <StyledContainer>
+                                    <h5><li>{data.doc_cbr[2].step}</li></h5>
+                                    <p>{data.doc_cbr[2].note}</p>
+                                    <StyledSection bigger={true}>
+                                        <Table striped bordered hover size="sm" responsive="md">
+                                            <StyledTableHead >
+                                                <tr>
+                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Uji</StyledTableHeadCol>
+                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Judul Dokumen Mirip</StyledTableHeadCol>
+                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Mirip</StyledTableHeadCol>
+                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Nilai Cosine Similarity</StyledTableHeadCol>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </Table>
-                                </StyledSection>
-                            </StyledContainer>
-                            <StyledContainer>
-                                <h5><li>{data.doc_cbr[2].step}</li></h5>
-                                <p>{data.doc_cbr[2].note}</p>
-                                <StyledSection bigger={true}>
-                                    <Table striped bordered hover size="sm" responsive="md">
-                                        <StyledTableHead >
-                                            <tr>
-                                                <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Uji</StyledTableHeadCol>
-                                                <StyledTableHeadCol scope="col" className="thead-sticky">Judul Dokumen Mirip</StyledTableHeadCol>
-                                                <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Mirip</StyledTableHeadCol>
-                                                <StyledTableHeadCol scope="col" className="thead-sticky">Nilai Cosine Similarity</StyledTableHeadCol>
-                                            </tr>
-                                        </StyledTableHead>
-                                        <tbody>
-                                            {data.doc_cbr[2].result.map((row, i) => (
-                                                <tr key={i}>
-                                                    <td>{row.doc_part_name}</td>
-                                                    <td>{row.sim_doc_title}</td>
-                                                    <td>{row.sim_doc_part_name}</td>
-                                                    <td>{row.cos_sim_value}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </Table>
-                                </StyledSection>
-                            </StyledContainer>
-                            <StyledContainer>
-                                <h5><li>{data.doc_cbr[3].step}</li></h5>
-                                <p>{data.doc_cbr[3].note}</p>
-                            </StyledContainer>
-                        </ol>
+                                            </StyledTableHead>
+                                            <tbody>
+                                                {data.doc_cbr[2].result.map((row, i) => (
+                                                    <tr key={i}>
+                                                        <td>{row.doc_part_name}</td>
+                                                        <td>{row.sim_doc_title}</td>
+                                                        <td>{row.sim_doc_part_name}</td>
+                                                        <td>{row.cos_sim_value}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </Table>
+                                    </StyledSection>
+                                </StyledContainer>
+                                <StyledContainer>
+                                    <h5><li>{data.doc_cbr[3].step}</li></h5>
+                                    <p>{data.doc_cbr[3].note}</p>
+                                </StyledContainer>
+                            </ol>
+                        }
                     </StyledContainer>
                     <StyledContainer>
                         <h4>Hasil Pengujian</h4>
                         <StyledSection bigger={true}>
-                        <Table striped bordered hover size="sm" responsive="md">
+                            { !(Config.isResultLoaded)? <></>:
+                            <Table striped bordered hover size="sm" responsive="md">
                                 <StyledTableHead >
                                     <tr className="align-top">
                                         <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Uji</StyledTableHeadCol>
@@ -736,7 +829,7 @@ const PageResult = (props) => {
                                     </tr>
                                 </StyledTableHead>
                                 <tbody>
-                                    {history.map((row, i) => (
+                                    { History.map((row, i) => (
                                         <tr key={i}>
                                             <td>{row.doc_part_name}</td>
                                             <td>{row.config}</td>
@@ -745,9 +838,11 @@ const PageResult = (props) => {
                                             <td>{row.cos_sim_value}</td>
                                             <td>{row.runtime}</td>
                                         </tr>
-                                    ))}
+                                        )
+                                    )}
                                 </tbody>
                             </Table>
+                            }
                         </StyledSection>
                     </StyledContainer>
                 </Container>

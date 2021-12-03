@@ -51,7 +51,7 @@ const FormFormatted = () => {
         formData.append("prop_email", Data.prop_email);
         formData.append("prop_sintaid", Data.prop_sintaid);
         formData.append("prop_doc", fileField.files[0]);
-        const res = await fetch(
+        await fetch(
             submit_url, {
                 method: 'POST',
                 body: formData
