@@ -15,12 +15,20 @@ const SectionResult = (props) => {
     const Result = props.data;
     const [PartView, setPartView] = useState(0); //using index
     const [PartViewItems, setPartViewItems] = useState(props.data.reusedItems[PartView]);
+    const [PartViewRetrieved, setPartViewRetrieved] = useState(0); //using index
+    const [PartViewItemsRetrieved, setPartViewItemsRetrieved] = useState(props.data.reusedItems[PartView]);
     useEffect(() => {
         console.log(PartView)
         setPartViewItems(
             props.data.reusedItems[PartView]
         )
     }, [PartView]);
+    useEffect(() => {
+        console.log(PartViewRetrieved)
+        setPartViewItemsRetrieved(
+            props.data.retrievedItems[PartViewRetrieved]
+        )
+    }, [PartViewRetrieved]);
 
     return(
         <>
@@ -34,36 +42,61 @@ const SectionResult = (props) => {
                     <h4><li>Retrieval</li></h4>
                     <p>Pada tahap ini dihimpun semua nilai kemiripan dokumen masukan dengan semua basis kasus.</p>
                     { (Result.retrievedItems.length===0)? <></> :
-                        <ol type="a">
-                            { Result.retrievedItems.map((part, index) => (
-                                <StyledContainer key={index}>
-                                    <h5><li>{part.chapter}</li></h5>
-                                    <StyledSection bigger={true}>
-                                        <Table striped bordered hover size="sm" responsive="md">
-                                            <StyledTableHead>
-                                                <tr>
-                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Judul Dokumen Mirip</StyledTableHeadCol>
-                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Mirip</StyledTableHeadCol>
-                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Nilai <i>Cosine Similarity</i></StyledTableHeadCol>
-                                                    <StyledTableHeadCol scope="col" className="thead-sticky">Aksi</StyledTableHeadCol>
-                                                </tr>
-                                            </StyledTableHead>
-                                            <tbody>
-                                                {part.data.map((row, index) => (
-                                                    <tr key={index}>
-                                                        <td>{row.doc_title}</td>
-                                                        <td>{row.sim_doc_part_name}</td>
-                                                        <td>{row.cos_sim_value}</td>
-                                                        <td><a href={`http://localhost:8000/download/${row.doc_filename}`}>Unduh</a></td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </Table>
-                                    </StyledSection>
-                                    <p><i>Total bagian dokumen yang diambil kembali (retrieved): {part.data.length} bagian dokumen</i></p>
-                                </StyledContainer>
-                            ))}
-                        </ol>
+                    <div className="row justify-content-center">
+                        <Container className="col-6 py-2">
+                            <Table striped bordered hover size="sm" responsive="md">
+                                <StyledTableHead>
+                                    <tr>
+                                        <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Uji</StyledTableHeadCol>
+                                        <StyledTableHeadCol scope="col" className="thead-sticky">Jumlah Bagian Dokumen <i>Retrieved</i></StyledTableHeadCol>
+                                    </tr>
+                                </StyledTableHead>
+                                <tbody>
+                                    {Result.retrievedItems.map((row, index) => (
+                                        <tr key={index}>
+                                            <td>{row.chapter}</td>
+                                            <td>{row.data.length}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
+                        </Container>
+                        <Container className="col-8 my-3">
+                            <ButtonGroup className="d-flex">
+                                { Result.retrievedItems.map((part, index) => (
+                                    <Button key={index} variant="secondary" onClick={()=> setPartViewRetrieved(index)}>{part.chapter}</Button>
+                                ))}
+                            </ButtonGroup>
+                        </Container> 
+                        { isObjectEmpty(PartViewItemsRetrieved) ? <></> : 
+                        <Container className="col-10">
+                            <h5 className="text-center">{PartViewItemsRetrieved.chapter}</h5>
+                            <StyledSection bigger={true}>
+                                <Table striped bordered hover size="sm" responsive="md">
+                                    <StyledTableHead>
+                                        <tr>
+                                            <StyledTableHeadCol scope="col" className="thead-sticky">Judul Dokumen Mirip</StyledTableHeadCol>
+                                            <StyledTableHeadCol scope="col" className="thead-sticky">Bagian Dokumen Mirip</StyledTableHeadCol>
+                                            <StyledTableHeadCol scope="col" className="thead-sticky">Nilai <i>Cosine Similarity</i></StyledTableHeadCol>
+                                            <StyledTableHeadCol scope="col" className="thead-sticky">Aksi</StyledTableHeadCol>
+                                        </tr>
+                                    </StyledTableHead>
+                                    <tbody>
+                                        {PartViewItemsRetrieved.data.map((row, index) => (
+                                            <tr key={index}>
+                                                <td>{row.doc_title}</td>
+                                                <td>{row.sim_doc_part_name}</td>
+                                                <td>{row.cos_sim_value}</td>
+                                                <td><a href={`http://localhost:8000/download/${row.doc_filename}`}>Unduh</a></td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </Table>
+                            </StyledSection>
+                            <p><i>Total bagian dokumen <i>retrieved</i>: {PartViewItemsRetrieved.data.length} bagian dokumen</i></p>
+                        </Container>
+                        }
+                    </div>
                     }
                 </Container>
                 <Container>
@@ -75,7 +108,7 @@ const SectionResult = (props) => {
                         </i>
                     </p>
                     { (Result.reusedItems.length===0)? <div>Sedang melakukan perhitungan...</div> :
-                    <div className="justify-content-center">
+                    <div className="row justify-content-center">
                         <Container className="col-6 py-2">
                             <Table striped bordered hover size="sm" responsive="md">
                                 <StyledTableHead>
@@ -104,7 +137,7 @@ const SectionResult = (props) => {
                         { isObjectEmpty(PartViewItems) ? <></> : 
                         <Container className="col-10">
                             <h5 className="text-center">{PartViewItems.chapter}</h5>
-                            <StyledSection>
+                            <StyledSection bigger={true}>
                                 <Table striped bordered hover size="sm" responsive="md">
                                     <StyledTableHead>
                                         <tr>
