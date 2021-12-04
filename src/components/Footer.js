@@ -2,6 +2,8 @@ import { StyledFooter } from "./styles/Footer.style";
 
 import { Container, Image } from "react-bootstrap";
 
+import img from '../assets/img/Devices-bro.svg';
+
 const Footer = () => {
     return (
         <div>
@@ -11,7 +13,8 @@ const Footer = () => {
                     <p>Deteksi Kemiripan Antar Dokumen dengan Metode <i>Case Based Reasoning</i></p>
                     <p>(Studi Kasus SIMNG LPPM Universitas Sriwijaya)</p>
                 </Container>
-                <Image src={"Devices-bro.svg"}/>
+                {/* <Image src={require("../assets/img/Devices-bro.svg")}/> */}
+                <Image src={img}/>
             </StyledFooter>
         </div>
     )

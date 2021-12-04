@@ -29,7 +29,7 @@ export const StyledLink = styled(Link)`
 `
 
 export const StyledContainer = styled.div`
-    margin: 0px;
+    margin: 0px 0px 20px 0px;
     padding: 20px opx;
 `
 

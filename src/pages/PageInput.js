@@ -10,6 +10,7 @@ import {
     Image
 } from "react-bootstrap";
 import GlobalStyles from "../components/styles/Global";
+import img from '../assets/img/Documents-bro.svg';
 
 const PageInput = () => {
 
@@ -23,7 +24,7 @@ const PageInput = () => {
                     <FormFormatted/>
                 </Container>
                 <Container className="col-6 ml-2 my-auto">
-                    <Image src="Documents-bro.svg" className="mx-auto d-block" alt="..."/>
+                    <Image src={img} className="mx-auto d-block" alt="..."/>
                 </Container>
             </Container>
             <Footer/>

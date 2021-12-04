@@ -2,7 +2,7 @@ import React from "react";
 import { Nav, Navbar, NavbarBrand } from "react-bootstrap";
 import { StyledLink, StyledImage } from './styles/Global.style'
 import { StyledHead } from './styles/Head.style';
-const img = ('../assets/img/unsri.png')
+import logo from '../assets/img/unsri.png';
 
 
 const Head = () => {
@@ -10,9 +10,9 @@ const Head = () => {
         <StyledHead>
             <Navbar className="row" variant="dark" fixed>
                 <NavbarBrand className="col-4">
-                    <StyledImage src={img}/>
-                    <StyledImage src={img}/>
-                    <StyledImage src={img}/>
+                    <StyledImage src={logo}/>
+                    <StyledImage src={logo}/>
+                    <StyledImage src={logo}/>
                 </NavbarBrand>
                 <Nav className="col-8 justify-content-end" activeKey='/'>
                     <Nav.Item>
