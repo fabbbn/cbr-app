@@ -82,6 +82,7 @@ const FormFormatted = () => {
                     name="prop_title" 
                     value={Data.prop_title}
                     onChange={handleChange}
+                    required
                 />
             </StyledFormGroup>
             <StyledFormGroup>
@@ -92,6 +93,7 @@ const FormFormatted = () => {
                     name="prop_writers" 
                     value={Data.prop_writers}
                     onChange={handleChange}
+                    required
                 />
             </StyledFormGroup>
             <StyledFormGroup>
@@ -102,11 +104,12 @@ const FormFormatted = () => {
                     name="prop_year" 
                     value={Data.prop_year}
                     onChange={handleChange}
+                    required
                 />
             </StyledFormGroup>
             <StyledFormGroup>
                 <Form.Label>Jenis Ajuan</Form.Label>
-                <Form.Select aria-label="Pilih Jenis Ajuan" name="prop_type" value={Data.prop_type} onChange={handleChange}>
+                <Form.Select aria-label="Pilih Jenis Ajuan" name="prop_type" value={Data.prop_type} onChange={handleChange} required>
                     <option value="">Pilih Jenis Ajuan</option>
                     <option value="Penelitian">Penelitian</option>
                     <option value="Pengabdian">Pengabdian</option>
@@ -120,6 +123,7 @@ const FormFormatted = () => {
                     name="prop_email" 
                     value={Data.prop_email}
                     onChange={handleChange}
+                    required
                 />
             </StyledFormGroup>
             <StyledFormGroup>
@@ -130,6 +134,7 @@ const FormFormatted = () => {
                     name="prop_sintaid" 
                     value={Data.prop_sintaid}
                     onChange={handleChange}
+                    required
                 />
             </StyledFormGroup>
             <StyledFormGroup>
@@ -140,6 +145,7 @@ const FormFormatted = () => {
                     accept=".pdf" 
                     value={Data.prop_doc}
                     onChange={handleChange}
+                    required
                 />
             </StyledFormGroup>
             <Container className="row justify-content-center mt-3">
