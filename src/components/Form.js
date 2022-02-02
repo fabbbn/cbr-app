@@ -8,6 +8,21 @@ import {
 import { Redirect } from "react-router";
 
 const FormFormatted = () => {
+    
+
+    const formValidation = (Data) => {
+        var valid = true;
+        const isBlank = (field) => (field==='');
+        if (isBlank(Data.prop_title)) return false;
+        if (isBlank(Data.prop_writers)) return false;
+        if (isBlank(Data.prop_year)) return false;
+        if (isBlank(Data.prop_type)) return false;
+        if (isBlank(Data.prop_email)) return false;
+        if (isBlank(Data.prop_sintaid)) return false;
+        if (isBlank(Data.prop_doc)) return false;
+        return valid;
+    }
+
     const [Data, setData] = useState({
         isSubmitted:false,
         prop_title: '',
@@ -27,6 +42,7 @@ const FormFormatted = () => {
     }
 
     const handleReset = (e) => {
+        alert("Proses dokumen dibatalkan");
         setData({
             issubmitted:false,
             prop_title: '',
@@ -36,7 +52,7 @@ const FormFormatted = () => {
             prop_email: '',
             prop_sintaid: '',
             prop_doc:''
-        })
+        });
     }
 
     const handleSubmit = async (e) => {
@@ -44,31 +60,36 @@ const FormFormatted = () => {
         const submit_url = 'http://localhost:8000/submit-form';
         const formData = new FormData();
         const fileField = document.querySelector('input[type="file"]');
-        formData.append("prop_title", Data.prop_title);
-        formData.append("prop_writers", Data.prop_writers);
-        formData.append("prop_year", Data.prop_year);
-        formData.append("prop_type", Data.prop_type);
-        formData.append("prop_email", Data.prop_email);
-        formData.append("prop_sintaid", Data.prop_sintaid);
-        formData.append("prop_doc", fileField.files[0]);
-        await fetch(
-            submit_url, {
-                method: 'POST',
-                body: formData
-            }
-        ).then(
-            response => response.json()
-        ).then(res => {
-            alert("Unggah berkas berhasil, akan mengarahkan anda ke halaman hasil...");
-            console.log(res);
-            setData({
-                isSubmitted:true,
-                data_input:res
-            });            
-        }).catch(error => {
-            alert("Unggah berkas gagal, silahkan periksa kembali formulir masukan anda");
-            console.log(error);
-        });
+        if (formValidation(Data)) {
+            formData.append("prop_title", Data.prop_title) ;
+            formData.append("prop_writers", Data.prop_writers);
+            formData.append("prop_year", Data.prop_year);
+            formData.append("prop_type", Data.prop_type);
+            formData.append("prop_email", Data.prop_email);
+            formData.append("prop_sintaid", Data.prop_sintaid);
+            formData.append("prop_doc", fileField.files[0]);
+            await fetch(
+                submit_url, {
+                    method: 'POST',
+                    body: formData
+                }
+            ).then(
+                response => response.json()
+            ).then(res => {
+                alert("Berkas berhasil diunggah, akan mengarahkan anda ke halaman hasil...");
+                console.log(res);
+                setData({
+                    isSubmitted:true,
+                    data_input:res
+                });            
+            }).catch(error => {
+                alert("Proses dokumen gagal, periksa kembali data yang anda masukkan dan dokumen yang anda sedang coba untuk unggah.");
+                console.log(error);
+            });
+        } else {
+            alert("Proses dokumen gagal, periksa kembali data yang anda masukkan dan dokumen yang anda sedang coba untuk unggah.")
+        }
+        
     }
     return(
         <>
@@ -145,7 +166,6 @@ const FormFormatted = () => {
                     accept=".pdf" 
                     value={Data.prop_doc}
                     onChange={handleChange}
-                    required
                 />
             </StyledFormGroup>
             <Container className="row justify-content-center mt-3">

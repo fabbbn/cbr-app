@@ -138,10 +138,14 @@ const PageResult = (props) => {
     
     const handleSubmit = (e) => {
         e.preventDefault();
-        setConfig({
-            value:Config.value,
-            isSubmitted:true
-        });
+        if ( Config.value === '' ) {
+            alert("Proses gagal, silahkan pilih konfigurasi terlebih dahulu");
+        } else {
+            setConfig({
+                value:Config.value,
+                isSubmitted:true
+            });
+        }
     }
 
     return (
@@ -174,7 +178,7 @@ const PageResult = (props) => {
                                         <option value="saptono">(4) Pembobotan dalam Saptono et al., 2018</option>
                                     </Form.Select>
                                 </StyledFormGroup>
-                                <Button className="col-4" bsPrefix="custom-btn" type="submit">Proses Dokumen</Button>
+                                <Button className="col-4" bsPrefix="custom-btn" type="submit">Lihat Hasil</Button>
                             </StyledForm>
                             <SectionWeighting data={Result} config={Config} isLoading={isLoading}/>
                             { (isLoading && Result.weightedItems.length===0)? <div><b><i>Sedang melakukan perhitungan...</i></b></div> : <></> }

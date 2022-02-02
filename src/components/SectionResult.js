@@ -104,7 +104,7 @@ const SectionResult = (props) => {
                         { isObjectEmpty(PartViewItems) ? <></> : 
                         <Container className="col-10">
                             <h5 className="text-center">{PartViewItems.chapter}</h5>
-                            <StyledSection>
+                            <StyledSection bigger={true}>
                                 <Table striped bordered hover size="sm" responsive="md">
                                     <StyledTableHead>
                                         <tr>
